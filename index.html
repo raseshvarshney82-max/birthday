@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#07070f">
+  <meta name="description" content="A little corner of the internet built to celebrate Vidushi.">
+  <title>Vidushi's Birthday ✦ 26.08</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,600;1,800&family=DM+Mono:wght@400;500&family=Caveat:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=5">
+</head>
+<body>
+
+  <!-- FX layers -->
+  <div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+  <canvas id="fxCanvas" aria-hidden="true"></canvas>
+  <div id="balloonLayer" aria-hidden="false"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
+  <div class="cursor-ring" id="cursorRing" aria-hidden="true"></div>
+
+  <!-- Loader / countdown -->
+  <div class="loader" id="loader">
+    <div class="loader-inner">
+      <p class="mono-label">BDAY_OS <span>v26.08</span></p>
+      <div class="loader-count" id="loaderCount">3</div>
+      <div class="loader-bar"><span id="loaderBar"></span></div>
+      <p class="loader-status" id="loaderStatus">warming up the confetti…</p>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="site-header" id="siteHeader">
+    <a class="brand" href="#top"><span class="brand-mark">V✦</span><span class="brand-name">BIRTHDAY.EXE</span></a>
+    <nav class="desktop-nav" aria-label="Main navigation">
+      <a href="#cake">Cake</a>
+      <a href="#memories">Memories</a>
+      <a href="#system">Stats</a>
+      <a href="#awards">Awards</a>
+      <a href="#letter">Letter</a>
+      <a href="#finale">Surprise</a>
+    </nav>
+    <div class="header-tools">
+      <button class="sound-toggle" id="soundToggle" type="button" aria-pressed="true" aria-label="Toggle sound effects">
+        <span class="sound-bars"><i></i><i></i><i></i><i></i></span><span class="sound-label">SOUND ON</span>
+      </button>
+      <button class="menu-toggle" id="menuToggle" type="button" aria-label="Open menu">MENU<span>+</span></button>
+    </div>
+  </header>
+  <nav class="mobile-menu" id="mobileMenu" aria-label="Mobile navigation">
+    <a href="#cake">01 — Cake</a><a href="#memories">02 — Memories</a><a href="#system">03 — Stats</a>
+    <a href="#awards">04 — Awards</a><a href="#letter">05 — Letter</a><a href="#finale">06 — Surprise</a>
+  </nav>
+
+  <main id="mainContent">
+
+    <!-- HERO -->
+    <section class="hero section" id="top">
+      <div class="hero-inner reveal">
+        <p class="eyebrow"><span class="live-dot"></span> TODAY · 26 . 08 . 2026</p>
+        <h1 class="hero-title">
+          HAPPY<br>BIRTHDAY
+          <em class="hero-name" data-text="Vidushi">Vidushi</em>
+        </h1>
+        <p class="hero-kicker">Warning: this page contains excessive glitter, unsolicited affection,<br>and one (1) fully interactive cake.</p>
+        <div class="hero-actions">
+          <button class="btn btn-primary magnetic" type="button" data-scroll="#cake">MAKE A WISH <span>↘</span></button>
+          <button class="btn btn-ghost magnetic" type="button" data-scroll="#memories">SEE THE EVIDENCE <span>↗</span></button>
+        </div>
+      </div>
+      <div class="hero-meta mono-label">
+        <span>SCROLL TO CELEBRATE ↓</span>
+        <span>FRIENDSHIP ARCHIVE / 001</span>
+        <span>HANDMADE WITH ♥</span>
+      </div>
+      <div class="scroll-hint" aria-hidden="true"><span></span></div>
+    </section>
+
+    <!-- MARQUEE -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track">
+        <span>HAPPY BIRTHDAY VIDUSHI ✦ MAKE A WISH ✦ BLOW THE CANDLES ✦ EAT THE CAKE ✦ POP THE BALLOONS ✦&nbsp;</span>
+        <span>HAPPY BIRTHDAY VIDUSHI ✦ MAKE A WISH ✦ BLOW THE CANDLES ✦ EAT THE CAKE ✦ POP THE BALLOONS ✦&nbsp;</span>
+      </div>
+    </div>
+
+    <!-- CAKE -->
+    <section class="section cake-section" id="cake">
+      <div class="section-head reveal">
+        <div>
+          <p class="eyebrow accent">01 / THE RITUAL</p>
+          <h2>Blow the<br><em>candles.</em></h2>
+        </div>
+        <p class="section-note">Tap every flame to blow it out.<br>The cake is watching. No pressure.</p>
+      </div>
+      <div class="cake-stage reveal">
+        <div class="cake-glow" aria-hidden="true"></div>
+        <div class="cake" id="cakeObj" role="group" aria-label="Birthday cake with three candles">
+          <div class="candle candle-left"><span class="flame" role="button" tabindex="0" aria-label="Blow out candle"></span><span class="smoke" aria-hidden="true"></span></div>
+          <div class="candle candle-center"><span class="flame" role="button" tabindex="0" aria-label="Blow out candle"></span><span class="smoke" aria-hidden="true"></span></div>
+          <div class="candle candle-right"><span class="flame" role="button" tabindex="0" aria-label="Blow out candle"></span><span class="smoke" aria-hidden="true"></span></div>
+          <div class="icing" aria-hidden="true"></div>
+          <div class="tier tier-top" aria-hidden="true"><i class="sprinkle s1"></i><i class="sprinkle s2"></i><i class="sprinkle s3"></i><i class="sprinkle s4"></i><i class="cherry"></i></div>
+          <div class="tier tier-bottom" aria-hidden="true"><i class="sprinkle s5"></i><i class="sprinkle s6"></i><i class="sprinkle s7"></i><i class="sprinkle s8"></i></div>
+          <div class="plate" aria-hidden="true"></div>
+        </div>
+        <p class="cake-hint" id="cakeHint">🔥 × 3 still burning…</p>
+        <div class="wish-card" id="wishCard">
+          <p class="mono-label accent">WISH_STATUS: GRANTED ✦</p>
+          <h3>Candles: defeated.</h3>
+          <p>Your wish has been filed and fast-tracked to the universe.<br>Express delivery. No refunds.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- MEMORIES -->
+    <section class="section memories-section" id="memories">
+      <div class="section-head reveal">
+        <div>
+          <p class="eyebrow mint">02 / THE MEMORY ARCHIVE</p>
+          <h2>Rare footage.<br><em>Real energy.</em></h2>
+        </div>
+        <p class="section-note">A carefully un-curated collection<br>of evidence &amp; iconic moments.</p>
+      </div>
+      <div class="memory-grid" id="memoryGrid"></div>
+    </section>
+
+    <!-- SYSTEM / STATS -->
+    <section class="section system-section" id="system">
+      <div class="section-head reveal">
+        <div>
+          <p class="eyebrow accent">03 / PERSONALITY DASHBOARD</p>
+          <h2>Vidushi<em>.exe</em></h2>
+        </div>
+        <p class="section-note">System analysis complete.<br>No bugs found. Several features.</p>
+      </div>
+      <div class="system-layout">
+        <div class="system-intro reveal">
+          <div class="system-stamp">V<small>2026</small></div>
+          <p>Built different.<br>Runs on snacks, inside jokes<br>and questionable timing.<br>Status: iconic.</p>
+          <button class="btn btn-small magnetic" id="scanButton" type="button">RUN SCAN <span>↗</span></button>
+        </div>
+        <div class="stats-list" id="statsList"></div>
+      </div>
+    </section>
+
+    <!-- AWARDS -->
+    <section class="section awards-section" id="awards">
+      <div class="section-head reveal">
+        <div>
+          <p class="eyebrow coral">04 / THE VIDUSHI AWARDS</p>
+          <h2>Officially<br><em>unofficial.</em></h2>
+        </div>
+        <p class="section-note">Peer-reviewed by absolutely no one.<br>Still 100% valid.</p>
+      </div>
+      <div class="awards-grid" id="awardsGrid"></div>
+    </section>
+
+    <!-- LETTER -->
+    <section class="section letter-section" id="letter">
+      <div class="letter-layout">
+        <div class="reveal">
+          <p class="eyebrow mint">05 / ONE SERIOUS SECTION</p>
+          <h2>Okay, fine.<br><em>One real thing.</em></h2>
+          <p class="section-note">Open when ready.<br>Possibly contains sincerity.</p>
+        </div>
+        <button class="envelope reveal reveal-delay" id="envelope" type="button" aria-expanded="false">
+          <span class="envelope-label mono-label">OPEN WHEN READY</span>
+          <span class="envelope-paper">
+            Happy Birthday, Vidushi! 🎂<br><br>
+            Hope this year brings you amazing memories, good people, fewer unnecessary problems,
+            and plenty of reasons to laugh at completely normal volumes in public.<br><br>
+            Stay exactly the way you are — the world genuinely needs the chaos.<br><br>
+            Have the best day. It's the law.<br><br><i>— from your friend ♥</i>
+          </span>
+          <span class="envelope-flap" aria-hidden="true"></span>
+        </button>
+      </div>
+    </section>
+
+    <!-- FINALE -->
+    <section class="section finale-section" id="finale">
+      <div class="finale-inner reveal">
+        <p class="eyebrow mint">06 / FINAL SURPRISE</p>
+        <h2>One last<br><em>thing…</em></h2>
+        <button class="gift-button" id="giftButton" type="button" aria-label="Open your gift">
+          <span class="gift-lid" aria-hidden="true"><b></b></span>
+          <span class="gift-boxbody" aria-hidden="true"><b></b></span>
+          <strong>OPEN IT ↗</strong>
+        </button>
+        <div class="final-message" id="finalMessage">
+          <p class="eyebrow accent">SURPRISE SUCCESSFULLY DEPLOYED</p>
+          <h3>Happy Birthday,<br>Vidushi! 🎉</h3>
+          <p>Here's to another year of chaos, laughter, terrible puns and conversations that solve nothing but heal everything.</p>
+          <button class="btn btn-primary magnetic" id="replayButton" type="button">CELEBRATE AGAIN 🔁</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p class="mono-label">© 2026 · BIRTHDAY.EXE · ALL RIGHTS RESERVED FOR VIDUSHI</p>
+  </footer>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <button class="lightbox-close" id="lightboxClose" type="button" aria-label="Close memory">×</button>
+    <button class="lightbox-nav lightbox-prev" id="lightboxPrev" type="button" aria-label="Previous memory">←</button>
+    <div class="lightbox-content">
+      <p class="eyebrow accent" id="lightboxLabel">MEMORY</p>
+      <div class="lightbox-visual" id="lightboxVisual">🎉</div>
+      <h2 id="lightboxCaption"></h2>
+      <p id="lightboxDetail"></p>
+    </div>
+    <button class="lightbox-nav lightbox-next" id="lightboxNext" type="button" aria-label="Next memory">→</button>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script src="js/main.js?v=9" defer></script>
+</body>
+</html>
