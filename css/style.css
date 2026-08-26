@@ -47,7 +47,7 @@ a{color:inherit;text-decoration:none}
 
 /* ---------- ambient layers ---------- */
 .aurora{position:fixed;inset:0;z-index:-3;overflow:hidden;pointer-events:none}
-.aurora i{position:absolute;width:55vmax;height:55vmax;border-radius:50%;filter:blur(90px);opacity:.5;will-change:transform}
+.aurora i{position:absolute;width:50vmax;height:50vmax;border-radius:50%;filter:blur(70px);opacity:.44;will-change:transform}
 .aurora i:nth-child(1){background:radial-gradient(circle,rgba(255,110,169,.32),transparent 60%);top:-18vmax;left:-12vmax;animation:drift1 26s ease-in-out infinite alternate}
 .aurora i:nth-child(2){background:radial-gradient(circle,rgba(167,139,250,.30),transparent 60%);bottom:-22vmax;right:-14vmax;animation:drift2 32s ease-in-out infinite alternate}
 .aurora i:nth-child(3){background:radial-gradient(circle,rgba(126,232,250,.16),transparent 60%);top:38%;left:44%;animation:drift3 38s ease-in-out infinite alternate}
@@ -55,10 +55,9 @@ a{color:inherit;text-decoration:none}
 @keyframes drift2{to{transform:translate(-8vmax,-9vmax) scale(1.1)}}
 @keyframes drift3{to{transform:translate(-12vmax,8vmax)}}
 
-.grain{position:fixed;inset:-50%;z-index:70;pointer-events:none;opacity:.05;
+.grain{position:fixed;inset:0;z-index:70;pointer-events:none;opacity:.04;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  animation:grainShift 1.2s steps(4) infinite}
-@keyframes grainShift{0%{transform:translate(0,0)}25%{transform:translate(-2%,1%)}50%{transform:translate(1%,-2%)}75%{transform:translate(-1%,2%)}100%{transform:translate(0,0)}}
+  background-size:180px 180px}
 
 #fxCanvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:110}
 
@@ -80,9 +79,9 @@ a{color:inherit;text-decoration:none}
 /* ---------- cursor ---------- */
 .cursor-dot,.cursor-ring{position:fixed;top:0;left:0;pointer-events:none;border-radius:50%;z-index:130;display:none}
 @media (pointer:fine){.cursor-dot,.cursor-ring{display:block}}
-.cursor-dot{width:8px;height:8px;background:var(--lime);box-shadow:0 0 14px var(--lime);transform:translate(-50%,-50%)}
+.cursor-dot{width:8px;height:8px;background:var(--lime);box-shadow:0 0 14px var(--lime);transform:translate3d(-100px,-100px,0)}
 .cursor-ring{width:38px;height:38px;border:1.5px solid rgba(213,243,109,.7);transform:translate(-50%,-50%);
-  transition:width .25s,height .25s,background .25s,border-color .25s}
+  transition:transform .12s linear,width .25s,height .25s,background .25s,border-color .25s;will-change:transform}
 body.cursor-hover .cursor-ring{width:64px;height:64px;background:rgba(213,243,109,.1);border-color:var(--lime)}
 .sparkle{position:fixed;z-index:129;pointer-events:none;font-size:12px;animation:sparkleFade .7s ease-out forwards}
 @keyframes sparkleFade{from{opacity:1;transform:scale(1) rotate(0)}to{opacity:0;transform:scale(.2) rotate(90deg) translateY(-14px)}}
@@ -257,7 +256,7 @@ main{position:relative;z-index:2}
 .memory-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:30px;perspective:1200px}
 .memory-card{position:relative;background:var(--cream);color:#2c2740;border-radius:6px;padding:16px 16px 20px;
   transform:rotate(var(--tilt,0deg));transform-style:preserve-3d;
-  transition:box-shadow .3s,filter .3s;box-shadow:0 20px 44px rgba(0,0,0,.4);will-change:transform}
+  transition:box-shadow .3s,filter .3s;box-shadow:0 20px 44px rgba(0,0,0,.4)}
 .memory-card:hover{z-index:3;box-shadow:0 30px 60px rgba(0,0,0,.5)}
 .memory-card::before{content:'';position:absolute;top:-13px;left:50%;transform:translateX(-50%) rotate(-3deg);
   width:110px;height:28px;background:rgba(213,243,109,.75);box-shadow:0 3px 8px rgba(0,0,0,.18);opacity:.9}
@@ -271,7 +270,7 @@ main{position:relative;z-index:2}
 
 /* ---------- system / stats ---------- */
 .system-section{background:linear-gradient(125deg,rgba(244,241,234,.05),rgba(244,241,234,.015));
-  border-block:1px solid var(--line);border-radius:44px;backdrop-filter:blur(6px)}
+  border-block:1px solid var(--line);border-radius:44px}
 .system-layout{display:grid;grid-template-columns:minmax(240px,.9fr) 1.6fr;gap:clamp(30px,5vw,70px);align-items:start}
 .system-intro{position:relative;padding:34px;border:1px dashed var(--line);border-radius:24px}
 .system-stamp{width:86px;height:86px;border-radius:22px;background:var(--grad);display:grid;place-items:center;
@@ -290,8 +289,8 @@ main{position:relative;z-index:2}
 
 /* ---------- awards ---------- */
 .awards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(330px,100%),1fr));gap:24px}
-.award{position:relative;padding:34px 30px;border-radius:26px;background:var(--glass);border:1px solid var(--line);
-  backdrop-filter:blur(12px);overflow:hidden;transition:transform .35s,border-color .35s,box-shadow .35s}
+.award{position:relative;padding:34px 30px;border-radius:26px;background:rgba(255,255,255,.065);border:1px solid var(--line);
+  overflow:hidden;transition:transform .35s,border-color .35s,box-shadow .35s}
 .award:hover{transform:translateY(-7px);border-color:rgba(255,110,169,.5);box-shadow:0 24px 50px rgba(255,110,169,.14)}
 .award::before{content:'';position:absolute;top:-70px;right:-70px;width:170px;height:170px;border-radius:50%;
   background:radial-gradient(circle,rgba(255,110,169,.22),transparent 70%);transition:.4s}
@@ -406,4 +405,16 @@ main{position:relative;z-index:2}
   .candle-left{margin-left:-44px}.candle-right{margin-left:44px}
   .icing{bottom:112px}
   .tier-top{bottom:124px}
+}
+
+@media (max-width:1600px){
+  .aurora i{width:46vmax;height:46vmax;filter:blur(60px);opacity:.4}
+  .aurora i:nth-child(3){animation:none}
+}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}
+  .aurora i,.marquee-track,.grain{animation:none!important}
+  .cursor-dot,.cursor-ring,.sparkle{display:none!important}
 }
