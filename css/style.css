@@ -418,3 +418,36 @@ main{position:relative;z-index:2}
   .aurora i,.marquee-track,.grain{animation:none!important}
   .cursor-dot,.cursor-ring,.sparkle{display:none!important}
 }
+
+/* ---------- performance-first mode ----------
+   The original blurred, animated viewport layers became disproportionately
+   expensive at laptop/desktop resolutions. This keeps the same colour and
+   depth without asking Chrome to repaint the full screen every frame. */
+.performance-mode .aurora{
+  display:block;
+  background:
+    radial-gradient(circle at 8% 2%,rgba(255,110,169,.14),transparent 38%),
+    radial-gradient(circle at 92% 88%,rgba(167,139,250,.14),transparent 40%),
+    radial-gradient(circle at 58% 45%,rgba(126,232,250,.055),transparent 34%);
+}
+.performance-mode .aurora i,.performance-mode .grain{display:none!important}
+.performance-mode .cursor-dot,.performance-mode .cursor-ring,.performance-mode .sparkle{display:none!important}
+.performance-mode body,.performance-mode a,.performance-mode button,.performance-mode [role="button"]{cursor:auto}
+.performance-mode .balloon{will-change:auto}
+.performance-mode .balloon-float{animation:none}
+.performance-mode .live-dot{animation:none;box-shadow:0 0 10px rgba(213,243,109,.65)}
+.performance-mode .sound-toggle.on .sound-bars i{animation:none;height:8px}
+.performance-mode .hero-name{animation:none;background-size:100% 100%;background-position:50% 0;filter:none}
+.performance-mode .scroll-hint span{animation:none;opacity:.7}
+.performance-mode .marquee-track{animation:none;transform:none}
+.performance-mode .cake-glow{animation:none;opacity:.42;filter:none}
+.performance-mode .flame{animation:none}
+.performance-mode .btn{will-change:auto}
+.performance-mode .sound-toggle,
+.performance-mode .btn-ghost,
+.performance-mode .mobile-menu,
+.performance-mode .wish-card,
+.performance-mode .lightbox,
+.performance-mode .lightbox-nav,
+.performance-mode .toast{backdrop-filter:none}
+.performance-mode #fxCanvas{contain:strict}

@@ -48,7 +48,11 @@ const rand  = (min, max) => Math.random() * (max - min) + min;
 const randInt = (min, max) => Math.floor(rand(min, max + 1));
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const SAVE_DATA = navigator.connection?.saveData === true;
-const LOW_POWER = REDUCED || SAVE_DATA || (navigator.hardwareConcurrency || 8) <= 4;
+// The design is intentionally performance-first on every device. Large
+// animated blur layers are handled in CSS; JS effects also use conservative
+// particle counts so enlarging the browser cannot multiply the workload.
+const PERFORMANCE_MODE = true;
+const LOW_POWER = PERFORMANCE_MODE || REDUCED || SAVE_DATA || (navigator.hardwareConcurrency || 8) <= 4;
 
 const PALETTE = ['#ff6ea9', '#a78bfa', '#7ee8fa', '#d5f36d', '#ff8a5c', '#fff7ec'];
 
@@ -178,6 +182,8 @@ const FX = (() => {
   const rockets = [];
   const sparks = [];
   let frame = 0;
+  let lastFrameTime = 0;
+  let frameScale = 1;
 
   function resize() {
     DPR = Math.min(devicePixelRatio || 1, LOW_POWER ? 1.25 : 1.75);
@@ -190,11 +196,14 @@ const FX = (() => {
   addEventListener('resize', resize);
 
   function ensureRunning() {
-    if (!frame && !document.hidden) frame = requestAnimationFrame(loop);
+    if (!frame && !document.hidden) {
+      if (!lastFrameTime) lastFrameTime = performance.now();
+      frame = requestAnimationFrame(loop);
+    }
   }
 
   function burst(x, y, count = 26, power = 9) {
-    const n = REDUCED ? Math.ceil(count / 3) : count;
+    const n = REDUCED ? Math.ceil(count / 3) : PERFORMANCE_MODE ? Math.ceil(count / 2) : count;
     for (let i = 0; i < n; i++) {
       const angle = rand(0, Math.PI * 2);
       const speed = rand(2, power);
@@ -224,7 +233,7 @@ const FX = (() => {
   }
 
   function rain(count = 120) {
-    const n = REDUCED ? Math.ceil(count / 4) : count;
+    const n = REDUCED ? Math.ceil(count / 4) : PERFORMANCE_MODE ? Math.ceil(count / 2) : count;
     for (let i = 0; i < n; i++) {
       pieces.push({
         x: rand(0, W), y: rand(-H * 0.4, -12),
@@ -276,12 +285,13 @@ const FX = (() => {
   }
 
   function stepPiece(p) {
-    p.age++;
-    p.vx *= 0.985;
-    p.vy = p.vy * 0.985 + p.g;
-    p.x += p.vx + Math.sin((p.age + p.w) * 0.09) * 0.6;
-    p.y += p.vy;
-    p.rot += p.vr;
+    p.age += frameScale;
+    const drag = Math.pow(0.985, frameScale);
+    p.vx *= drag;
+    p.vy = p.vy * drag + p.g * frameScale;
+    p.x += (p.vx + Math.sin((p.age + p.w) * 0.09) * 0.6) * frameScale;
+    p.y += p.vy * frameScale;
+    p.rot += p.vr * frameScale;
     return p.age < p.life && p.y < H + 30;
   }
 
@@ -308,9 +318,9 @@ const FX = (() => {
   }
 
   function stepRocket(r, idx) {
-    r.x += r.vx;
-    r.y += r.vy;
-    r.vy += 0.045;
+    r.x += r.vx * frameScale;
+    r.y += r.vy * frameScale;
+    r.vy += 0.045 * frameScale;
     ctx2d.strokeStyle = `hsl(${r.hue} 100% 72%)`;
     ctx2d.lineWidth = 2.4;
     ctx2d.beginPath();
@@ -325,12 +335,13 @@ const FX = (() => {
   }
 
   function stepSpark(s, i) {
-    s.age++;
+    s.age += frameScale;
     s.px = s.x; s.py = s.y;
-    s.vx *= 0.966;
-    s.vy = s.vy * 0.966 + 0.055;
-    s.x += s.vx;
-    s.y += s.vy;
+    const drag = Math.pow(0.966, frameScale);
+    s.vx *= drag;
+    s.vy = s.vy * drag + 0.055 * frameScale;
+    s.x += s.vx * frameScale;
+    s.y += s.vy * frameScale;
     if (s.age >= s.life) { sparks.splice(i, 1); return; }
     const alpha = 1 - s.age / s.life;
     ctx2d.strokeStyle = `hsla(${s.hue}, 100%, ${62 + alpha * 22}%, ${alpha})`;
@@ -341,9 +352,11 @@ const FX = (() => {
     ctx2d.stroke();
   }
 
-  function loop() {
+  function loop(now) {
     frame = 0;
     if (document.hidden) return;
+    frameScale = Math.min(60, Math.max(0.5, (now - lastFrameTime) / 16.667));
+    lastFrameTime = now;
     ctx2d.clearRect(0, 0, W, H);
     ctx2d.globalCompositeOperation = 'lighter';
     for (let i = rockets.length - 1; i >= 0; i--) stepRocket(rockets[i], i);
@@ -351,6 +364,7 @@ const FX = (() => {
     ctx2d.globalCompositeOperation = 'source-over';
     drawPieces();
     if (pieces.length || rockets.length || sparks.length) ensureRunning();
+    else lastFrameTime = 0;
   }
 
   document.addEventListener('visibilitychange', () => {
@@ -383,8 +397,8 @@ const Balloons = (() => {
     setTimeout(cleanup, 300);
   }
 
-  function spawn() {
-    if (document.hidden || REDUCED || alive >= (LOW_POWER ? 4 : 5)) return;
+  function spawn(staticMode = false) {
+    if (document.hidden || REDUCED || alive >= (PERFORMANCE_MODE ? 2 : LOW_POWER ? 4 : 5)) return;
     alive++;
     const el = document.createElement('div');
     el.className = 'balloon';
@@ -398,11 +412,20 @@ const Balloons = (() => {
     el.style.setProperty('--h', HUES[randInt(0, HUES.length - 1)]);
     el.style.setProperty('--sway', `${rand(2.2, 3.6)}s`);
     el.style.setProperty('--amp', `${rand(7, 16)}px`);
-    el.style.left = `${rand(3, 91)}vw`;
-    const scale = rand(0.65, 1.15);
+    el.style.left = staticMode ? (alive === 1 ? '4vw' : 'auto') : `${rand(3, 91)}vw`;
+    if (staticMode && alive === 2) el.style.right = '5vw';
+    if (staticMode) el.style.bottom = alive === 1 ? '9vh' : '62vh';
+    const scale = staticMode ? (alive === 1 ? 0.72 : 0.86) : rand(0.65, 1.15);
     el.style.transform = `translate3d(0,0,0) scale(${scale})`;
 
     layer.appendChild(el);
+
+    if (staticMode) {
+      const anim = { pause(){}, cancel(){} };
+      const cleanup = () => { active.delete(el); el.remove(); alive--; };
+      active.set(el, { anim, cleanup });
+      return;
+    }
 
     const duration = rand(11000, 17000);
     const travel = innerHeight + 390;
@@ -437,6 +460,11 @@ const Balloons = (() => {
   }, true);
 
   function start() {
+    if (PERFORMANCE_MODE) {
+      spawn(true);
+      setTimeout(() => spawn(true), 120);
+      return;
+    }
     spawn(); setTimeout(spawn, 900); setTimeout(spawn, 1900);
     timer = setInterval(spawn, randInt(3200, 4800));
   }
@@ -483,7 +511,6 @@ function initLoader() {
     setTimeout(() => {
       loader.classList.add('done');
       header.classList.add('visible');
-      FX.cannon();
       AudioFX.fanfare();
       showToast(`Welcome to the party, ${CONFIG.name} 🎉`);
       Balloons.start();
@@ -560,7 +587,7 @@ function initPointer() {
   const dot = $('#cursorDot'), ring = $('#cursorRing');
   const fine = matchMedia('(pointer:fine)').matches;
 
-  if (fine && dot && ring) {
+  if (fine && !PERFORMANCE_MODE && dot && ring) {
     let mx = innerWidth / 2, my = innerHeight / 2, pointerFrame = 0;
     let lastSpark = 0;
     const paintPointer = () => {
@@ -593,7 +620,7 @@ function initPointer() {
 
   }
 
-  $$('.magnetic').forEach(btn => {
+  if (!PERFORMANCE_MODE) $$('.magnetic').forEach(btn => {
     btn.addEventListener('mousemove', e => {
       const r = btn.getBoundingClientRect();
       const dx = e.clientX - (r.left + r.width / 2);
@@ -609,7 +636,7 @@ function initPointer() {
     const now = performance.now();
     if (now - lastTap < 90) return;
     lastTap = now;
-    FX.burst(e.clientX, e.clientY, 12, 7);
+    FX.burst(e.clientX, e.clientY, PERFORMANCE_MODE ? 6 : 12, 7);
   }, { passive: true });
 }
 
