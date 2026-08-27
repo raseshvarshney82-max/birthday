@@ -11,13 +11,13 @@ const CONFIG = {
   name: 'Vidushi',
   secretWord: 'vidushi',
   photos: [
-    { src: 'assets/memories/01-baby-with-family.png?v=2', label: 'CHAPTER_01', title: 'The very beginning.', detail: 'A tiny Vidushi, surrounded by love from day one.', position: 'center' },
-    { src: 'assets/memories/02-grandpa.png', label: 'CHAPTER_02', title: 'Grandpa’s little star.', detail: 'A beautiful old memory, held close.', position: 'center 42%' },
-    { src: 'assets/memories/03-little-krishna.png', label: 'CHAPTER_03', title: 'Little Krishna.', detail: 'Dressed for the part, already completely iconic.', position: 'center 34%' },
-    { src: 'assets/memories/04-black-dress.png', label: 'CHAPTER_04', title: 'Classic in black.', detail: 'A look that belongs in the highlight reel.', position: 'center 38%' },
-    { src: 'assets/memories/05-festive-lights.png?v=2', label: 'CHAPTER_05', title: 'Festival lights.', detail: 'Dressed up beneath a sky full of sparkle.', position: 'center' },
-    { src: 'assets/memories/06-birthday-glow.png', label: 'CHAPTER_06', title: 'Birthday glow.', detail: 'Golden balloons, cake, and a very happy smile.', position: 'center 38%' },
-    { src: 'assets/memories/07-mirror-selfie.png', label: 'CHAPTER_07', title: 'Mirror moment.', detail: 'A little confidence, a lot of style.', position: 'center 27%' },
+    { src: 'assets/memories/01-baby-with-family.webp', label: 'CHAPTER_01', title: 'The very beginning.', detail: 'A tiny Vidushi, surrounded by love from day one.', position: 'center' },
+    { src: 'assets/memories/02-grandpa.webp', label: 'CHAPTER_02', title: 'Grandpa’s little star.', detail: 'A beautiful old memory, held close.', position: 'center 42%' },
+    { src: 'assets/memories/03-little-krishna.webp', label: 'CHAPTER_03', title: 'Little Krishna.', detail: 'Dressed for the part, already completely iconic.', position: 'center 34%' },
+    { src: 'assets/memories/04-black-dress.webp', label: 'CHAPTER_04', title: 'Classic in black.', detail: 'A look that belongs in the highlight reel.', position: 'center 38%' },
+    { src: 'assets/memories/05-festive-lights.webp', label: 'CHAPTER_05', title: 'Festival lights.', detail: 'Dressed up beneath a sky full of sparkle.', position: 'center' },
+    { src: 'assets/memories/06-birthday-glow.webp', label: 'CHAPTER_06', title: 'Birthday glow.', detail: 'Golden balloons, cake, and a very happy smile.', position: 'center 38%' },
+    { src: 'assets/memories/07-mirror-selfie.webp', label: 'CHAPTER_07', title: 'Mirror moment.', detail: 'A little confidence, a lot of style.', position: 'center 27%' },
     { src: 'assets/memories/08-night-in-blue.jpg', label: 'CHAPTER_08', title: 'Night in blue.', detail: 'A beautiful evening, bright city lights, and her.', position: 'center 37%' }
   ],
   stats: [
@@ -47,6 +47,12 @@ const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const rand  = (min, max) => Math.random() * (max - min) + min;
 const randInt = (min, max) => Math.floor(rand(min, max + 1));
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const SAVE_DATA = navigator.connection?.saveData === true;
+// The design is intentionally performance-first on every device. Large
+// animated blur layers are handled in CSS; JS effects also use conservative
+// particle counts so enlarging the browser cannot multiply the workload.
+const PERFORMANCE_MODE = true;
+const LOW_POWER = PERFORMANCE_MODE || REDUCED || SAVE_DATA || (navigator.hardwareConcurrency || 8) <= 4;
 
 const PALETTE = ['#ff6ea9', '#a78bfa', '#7ee8fa', '#d5f36d', '#ff8a5c', '#fff7ec'];
 
@@ -69,6 +75,9 @@ const AudioFX = (() => {
 
   function ready() {
     if (!enabled) return false;
+    // Do not allocate a suspended audio graph during the loader. Audio starts
+    // after the first real interaction, which is also what browsers require.
+    if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return false;
     try {
       if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
       if (ctx.state === 'suspended') ctx.resume();
@@ -172,9 +181,12 @@ const FX = (() => {
   const pieces = [];
   const rockets = [];
   const sparks = [];
+  let frame = 0;
+  let lastFrameTime = 0;
+  let frameScale = 1;
 
   function resize() {
-    DPR = Math.min(devicePixelRatio || 1, 2);
+    DPR = Math.min(devicePixelRatio || 1, LOW_POWER ? 1.25 : 1.75);
     W = innerWidth; H = innerHeight;
     canvas.width = W * DPR;
     canvas.height = H * DPR;
@@ -183,8 +195,15 @@ const FX = (() => {
   resize();
   addEventListener('resize', resize);
 
+  function ensureRunning() {
+    if (!frame && !document.hidden) {
+      if (!lastFrameTime) lastFrameTime = performance.now();
+      frame = requestAnimationFrame(loop);
+    }
+  }
+
   function burst(x, y, count = 26, power = 9) {
-    const n = REDUCED ? Math.ceil(count / 3) : count;
+    const n = REDUCED ? Math.ceil(count / 3) : PERFORMANCE_MODE ? Math.ceil(count / 2) : count;
     for (let i = 0; i < n; i++) {
       const angle = rand(0, Math.PI * 2);
       const speed = rand(2, power);
@@ -204,16 +223,17 @@ const FX = (() => {
       });
     }
     trim();
+    ensureRunning();
   }
 
   function cannon() {
-    burst(W * 0.5, H * 0.42, 70, 13);
-    burst(W * 0.06, H * 0.86, 45, 15);
-    burst(W * 0.94, H * 0.86, 45, 15);
+    burst(W * 0.5, H * 0.42, LOW_POWER ? 36 : 52, 13);
+    burst(W * 0.06, H * 0.86, LOW_POWER ? 20 : 28, 15);
+    burst(W * 0.94, H * 0.86, LOW_POWER ? 20 : 28, 15);
   }
 
   function rain(count = 120) {
-    const n = REDUCED ? Math.ceil(count / 4) : count;
+    const n = REDUCED ? Math.ceil(count / 4) : PERFORMANCE_MODE ? Math.ceil(count / 2) : count;
     for (let i = 0; i < n; i++) {
       pieces.push({
         x: rand(0, W), y: rand(-H * 0.4, -12),
@@ -226,10 +246,11 @@ const FX = (() => {
       });
     }
     trim();
+    ensureRunning();
   }
 
   function trim() {
-    const max = REDUCED ? 220 : 650;
+    const max = REDUCED ? 160 : LOW_POWER ? 360 : 520;
     if (pieces.length > max) pieces.splice(0, pieces.length - max);
   }
 
@@ -241,10 +262,11 @@ const FX = (() => {
       ty: targetY,
       hue: randInt(0, 360)
     });
+    ensureRunning();
   }
 
   function explode(r) {
-    const count = REDUCED ? 34 : randInt(56, 92);
+    const count = REDUCED ? 28 : LOW_POWER ? randInt(42, 64) : randInt(52, 78);
     for (let i = 0; i < count; i++) {
       const angle = (Math.PI * 2 * i) / count + rand(-0.08, 0.08);
       const speed = rand(1.6, 6.4);
@@ -263,12 +285,13 @@ const FX = (() => {
   }
 
   function stepPiece(p) {
-    p.age++;
-    p.vx *= 0.985;
-    p.vy = p.vy * 0.985 + p.g;
-    p.x += p.vx + Math.sin((p.age + p.w) * 0.09) * 0.6;
-    p.y += p.vy;
-    p.rot += p.vr;
+    p.age += frameScale;
+    const drag = Math.pow(0.985, frameScale);
+    p.vx *= drag;
+    p.vy = p.vy * drag + p.g * frameScale;
+    p.x += (p.vx + Math.sin((p.age + p.w) * 0.09) * 0.6) * frameScale;
+    p.y += p.vy * frameScale;
+    p.rot += p.vr * frameScale;
     return p.age < p.life && p.y < H + 30;
   }
 
@@ -295,9 +318,9 @@ const FX = (() => {
   }
 
   function stepRocket(r, idx) {
-    r.x += r.vx;
-    r.y += r.vy;
-    r.vy += 0.045;
+    r.x += r.vx * frameScale;
+    r.y += r.vy * frameScale;
+    r.vy += 0.045 * frameScale;
     ctx2d.strokeStyle = `hsl(${r.hue} 100% 72%)`;
     ctx2d.lineWidth = 2.4;
     ctx2d.beginPath();
@@ -312,12 +335,13 @@ const FX = (() => {
   }
 
   function stepSpark(s, i) {
-    s.age++;
+    s.age += frameScale;
     s.px = s.x; s.py = s.y;
-    s.vx *= 0.966;
-    s.vy = s.vy * 0.966 + 0.055;
-    s.x += s.vx;
-    s.y += s.vy;
+    const drag = Math.pow(0.966, frameScale);
+    s.vx *= drag;
+    s.vy = s.vy * drag + 0.055 * frameScale;
+    s.x += s.vx * frameScale;
+    s.y += s.vy * frameScale;
     if (s.age >= s.life) { sparks.splice(i, 1); return; }
     const alpha = 1 - s.age / s.life;
     ctx2d.strokeStyle = `hsla(${s.hue}, 100%, ${62 + alpha * 22}%, ${alpha})`;
@@ -328,16 +352,24 @@ const FX = (() => {
     ctx2d.stroke();
   }
 
-  function loop() {
+  function loop(now) {
+    frame = 0;
+    if (document.hidden) return;
+    frameScale = Math.min(60, Math.max(0.5, (now - lastFrameTime) / 16.667));
+    lastFrameTime = now;
     ctx2d.clearRect(0, 0, W, H);
     ctx2d.globalCompositeOperation = 'lighter';
     for (let i = rockets.length - 1; i >= 0; i--) stepRocket(rockets[i], i);
     for (let i = sparks.length - 1; i >= 0; i--) stepSpark(sparks[i], i);
     ctx2d.globalCompositeOperation = 'source-over';
     drawPieces();
-    requestAnimationFrame(loop);
+    if (pieces.length || rockets.length || sparks.length) ensureRunning();
+    else lastFrameTime = 0;
   }
-  requestAnimationFrame(loop);
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && (pieces.length || rockets.length || sparks.length)) ensureRunning();
+  });
 
   return { burst, cannon, firework, volley, rain };
 })();
@@ -365,8 +397,8 @@ const Balloons = (() => {
     setTimeout(cleanup, 300);
   }
 
-  function spawn() {
-    if (document.hidden || REDUCED || alive >= 6) return;
+  function spawn(staticMode = false) {
+    if (document.hidden || REDUCED || alive >= (PERFORMANCE_MODE ? 2 : LOW_POWER ? 4 : 5)) return;
     alive++;
     const el = document.createElement('div');
     el.className = 'balloon';
@@ -380,14 +412,28 @@ const Balloons = (() => {
     el.style.setProperty('--h', HUES[randInt(0, HUES.length - 1)]);
     el.style.setProperty('--sway', `${rand(2.2, 3.6)}s`);
     el.style.setProperty('--amp', `${rand(7, 16)}px`);
-    el.style.left = `${rand(3, 91)}vw`;
-    el.style.transform = `scale(${rand(0.65, 1.15)})`;
+    el.style.left = staticMode ? (alive === 1 ? '4vw' : 'auto') : `${rand(3, 91)}vw`;
+    if (staticMode && alive === 2) el.style.right = '5vw';
+    if (staticMode) el.style.bottom = alive === 1 ? '9vh' : '62vh';
+    const scale = staticMode ? (alive === 1 ? 0.72 : 0.86) : rand(0.65, 1.15);
+    el.style.transform = `translate3d(0,0,0) scale(${scale})`;
 
     layer.appendChild(el);
 
+    if (staticMode) {
+      const anim = { pause(){}, cancel(){} };
+      const cleanup = () => { active.delete(el); el.remove(); alive--; };
+      active.set(el, { anim, cleanup });
+      return;
+    }
+
     const duration = rand(11000, 17000);
+    const travel = innerHeight + 390;
     const anim = el.animate(
-      [{ bottom: '-210px' }, { bottom: '112vh' }],
+      [
+        { transform: `translate3d(0,0,0) scale(${scale})` },
+        { transform: `translate3d(0,-${travel}px,0) scale(${scale})` }
+      ],
       { duration, easing: 'linear', fill: 'forwards' }
     );
     const cleanup = () => { anim.cancel(); active.delete(el); el.remove(); alive--; };
@@ -414,6 +460,11 @@ const Balloons = (() => {
   }, true);
 
   function start() {
+    if (PERFORMANCE_MODE) {
+      spawn(true);
+      setTimeout(() => spawn(true), 120);
+      return;
+    }
     spawn(); setTimeout(spawn, 900); setTimeout(spawn, 1900);
     timer = setInterval(spawn, randInt(3200, 4800));
   }
@@ -430,14 +481,14 @@ function initLoader() {
   let progress = 0;
 
   const fill = setInterval(() => {
-    progress += rand(14, 24);
+    progress += rand(22, 30);
     bar.style.width = `${Math.min(progress, 100)}%`;
     statusEl.textContent = steps[Math.min(Math.floor(progress / 26), steps.length - 1)];
     if (progress >= 100) {
       clearInterval(fill);
-      setTimeout(countdown, 350);
+      setTimeout(countdown, 180);
     }
-  }, 260);
+  }, 180);
 
   function tick(n) {
     count.textContent = n;
@@ -450,21 +501,20 @@ function initLoader() {
 
   function countdown() {
     tick('3');
-    setTimeout(() => tick('2'), 620);
-    setTimeout(() => tick('1'), 1240);
+    setTimeout(() => tick('2'), 420);
+    setTimeout(() => tick('1'), 840);
     setTimeout(() => {
       count.textContent = '🎉';
       count.animate([{ transform: 'scale(.4)' }, { transform: 'scale(1.25)' }, { transform: 'scale(1)' }],
         { duration: 450, easing: 'cubic-bezier(.2,1.6,.3,1)' });
-    }, 1860);
+    }, 1260);
     setTimeout(() => {
       loader.classList.add('done');
       header.classList.add('visible');
-      FX.cannon();
       AudioFX.fanfare();
       showToast(`Welcome to the party, ${CONFIG.name} 🎉`);
       Balloons.start();
-    }, 2350);
+    }, 1650);
   }
 }
 
@@ -477,7 +527,7 @@ function renderContent() {
     grid.innerHTML = CONFIG.photos.map((p, i) => `
       <article class="memory-card reveal"
                style="--tilt:0deg">
-        <div class="memory-visual" style="--photo-position:${p.position}"><img src="${p.src}" alt="${p.title}" loading="lazy"></div>
+        <div class="memory-visual" style="--photo-position:${p.position}"><img src="${p.src}" alt="${p.title}" loading="lazy" decoding="async" fetchpriority="low"></div>
         <div class="memory-caption">${p.title}</div>
       </article>`).join('');
   }
@@ -537,27 +587,21 @@ function initPointer() {
   const dot = $('#cursorDot'), ring = $('#cursorRing');
   const fine = matchMedia('(pointer:fine)').matches;
 
-  if (fine && dot && ring) {
-    let mx = innerWidth / 2, my = innerHeight / 2, rx = mx, ry = my;
+  if (fine && !PERFORMANCE_MODE && dot && ring) {
+    let mx = innerWidth / 2, my = innerHeight / 2, pointerFrame = 0;
+    let lastSpark = 0;
+    const paintPointer = () => {
+      pointerFrame = 0;
+      const position = `translate3d(${mx}px,${my}px,0) translate(-50%,-50%)`;
+      dot.style.transform = position;
+      ring.style.transform = position;
+    };
     addEventListener('pointermove', e => {
       mx = e.clientX; my = e.clientY;
-      dot.style.left = `${mx}px`; dot.style.top = `${my}px`;
-    }, { passive: true });
-    (function follow() {
-      rx += (mx - rx) * 0.16; ry += (my - ry) * 0.16;
-      ring.style.left = `${rx}px`; ring.style.top = `${ry}px`;
-      requestAnimationFrame(follow);
-    })();
+      if (!pointerFrame) pointerFrame = requestAnimationFrame(paintPointer);
 
-    document.addEventListener('mouseover', e => {
-      document.body.classList.toggle('cursor-hover',
-        !!e.target.closest('a,button,[role="button"]'));
-    });
-
-    let lastSpark = 0;
-    addEventListener('pointermove', e => {
       const now = performance.now();
-      if (REDUCED || now - lastSpark < 50 || Math.random() > 0.5) return;
+      if (REDUCED || LOW_POWER || now - lastSpark < 140 || Math.random() > 0.45) return;
       lastSpark = now;
       const s = document.createElement('span');
       s.className = 'sparkle';
@@ -568,9 +612,15 @@ function initPointer() {
       document.body.appendChild(s);
       setTimeout(() => s.remove(), 720);
     }, { passive: true });
+
+    document.addEventListener('mouseover', e => {
+      document.body.classList.toggle('cursor-hover',
+        !!e.target.closest('a,button,[role="button"]'));
+    });
+
   }
 
-  $$('.magnetic').forEach(btn => {
+  if (!PERFORMANCE_MODE) $$('.magnetic').forEach(btn => {
     btn.addEventListener('mousemove', e => {
       const r = btn.getBoundingClientRect();
       const dx = e.clientX - (r.left + r.width / 2);
@@ -586,7 +636,7 @@ function initPointer() {
     const now = performance.now();
     if (now - lastTap < 90) return;
     lastTap = now;
-    FX.burst(e.clientX, e.clientY, 12, 7);
+    FX.burst(e.clientX, e.clientY, PERFORMANCE_MODE ? 6 : 12, 7);
   }, { passive: true });
 }
 
@@ -725,8 +775,8 @@ function initInteractions() {
       gift.classList.remove('shaking');
       gift.classList.add('open');
       message.classList.add('show');
-      FX.volley(10, 300);
-      FX.rain(90);
+      FX.volley(8, 320);
+      FX.rain(64);
       AudioFX.melody();
       showToast('SURPRISE SUCCESSFULLY DEPLOYED 🎁');
     }, 480);
@@ -751,7 +801,7 @@ function initInteractions() {
     typed = (typed + e.key.toLowerCase()).slice(-CONFIG.secretWord.length);
     if (typed === CONFIG.secretWord) {
       typed = '';
-      FX.cannon(); FX.volley(14, 260); FX.rain(140);
+      FX.cannon(); FX.volley(10, 280); FX.rain(90);
       AudioFX.melody();
       showToast(`<b>${CONFIG.name.toUpperCase()}</b> MODE: FULLY ACTIVATED ✦✦✦`);
     }
